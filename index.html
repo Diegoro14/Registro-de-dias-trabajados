@@ -417,6 +417,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0; background:var(--bg); color:var(--ink);}
+  main{zoom:var(--zoom, 1);}
   body{
     padding-top:env(safe-area-inset-top);
     padding-bottom:calc(env(safe-area-inset-bottom) + 24px);
@@ -1066,7 +1067,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         <span><i style="background:#2947B0;"></i>Trabajo</span>
         <span><i style="background:#1D8FD1;"></i>Administrativo</span>
         <span><i style="background:#E8862B;"></i>Media jornada</span>
-        <span><i style="background:#D1453A;"></i>Autorizado</span>
+        <span><i style="background:#D1453A;"></i>Dia libre autorizado por jefatura</span>
         <span><i style="background:#FF0000;"></i>Extra</span>
         <span><i style="background:#E8B62B;"></i>🟡 Descanso (días)</span>
         <span><i style="background:#3B9159;"></i>🟢 Vacaciones (días)</span>
@@ -1096,7 +1097,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       <button type="button" data-tipo="media_jornada">🟠 Media jornada</button>
     </div>
     <div class="tipo-selector">
-      <button type="button" data-tipo="autorizado">🔴 Autorizado jefatura</button>
+      <button type="button" data-tipo="autorizado">🔴 Dia libre autorizado por jefatura</button>
       <button type="button" data-tipo="descanso">🟡 Descanso</button>
       <button type="button" data-tipo="vacaciones">🟢 Vacaciones</button>
     </div>
@@ -1360,7 +1361,7 @@ const TIPO_INFO = {
   trabajo:        { emoji:'🕐', label:'Trabajo',                 cls:'tipo-trabajo' },
   administrativo: { emoji:'🔵', label:'Día administrativo',      cls:'tipo-administrativo' },
   media_jornada:  { emoji:'🟠', label:'Media jornada',           cls:'tipo-media' },
-  autorizado:     { emoji:'🔴', label:'Autorizado por jefatura', cls:'tipo-autorizado' },
+  autorizado:     { emoji:'🔴', label:'Dia libre autorizado por jefatura', cls:'tipo-autorizado' },
   descanso:       { emoji:'🟡', label:'Descanso',                cls:'tipo-descanso' },
   vacaciones:     { emoji:'🟢', label:'Vacaciones',              cls:'tipo-vacaciones' }
 };
@@ -2449,8 +2450,16 @@ function setLadoModalHE(lado){
 hePopover.querySelectorAll('.he-lado-btn').forEach(btn=>{
   btn.addEventListener('click', ()=> setLadoModalHE(btn.dataset.lado));
 });
+let heLastVibMin = -1;
 modalHERange.addEventListener('input', e=>{
-  modalHEDisplay.textContent = fmtMinutosHE(+e.target.value);
+  const val = +e.target.value;
+  modalHEDisplay.textContent = fmtMinutosHE(val);
+  // Vibrar cada 30 minutos
+  const slot30 = Math.floor(val / 30);
+  if(slot30 !== heLastVibMin && navigator.vibrate){
+    heLastVibMin = slot30;
+    navigator.vibrate(12);
+  }
 });
 
 // Cierra el popover al hacer click fuera o en Escape
@@ -2538,6 +2547,7 @@ function abrirModalHE(idx, anchorEl){
   setLadoModalHE(existente ? existente.lado : 'entrada');
   const minutos = existente && existente.minutos > 0 ? existente.minutos : 30;
   modalHERange.value = minutos;
+  heLastVibMin = Math.floor(minutos / 30);
   modalHEDisplay.textContent = fmtMinutosHE(minutos);
   // Cargar horario actual del día en los inputs del popover
   hePopInicio.value = dia.inicio || '';
@@ -2704,12 +2714,12 @@ document.getElementById('btnExportar').addEventListener('click', async ()=>{
   const p = getActiva();
   if(!p) return;
   const btn = document.getElementById('btnExportar');
-  const original = btn.textContent;
-  btn.textContent = 'Generando…';
+  const originalHTML = btn.innerHTML;
+  btn.innerHTML = 'Generando…';
   btn.disabled = true;
   try{
     const diasOrdenados = diasSegunFiltro(p);
-    if(diasOrdenados.length === 0){ showToast('No hay días cargados en ese mes'); btn.textContent = original; btn.disabled = false; return; }
+    if(diasOrdenados.length === 0){ showToast('No hay días cargados en ese mes'); btn.innerHTML = originalHTML; btn.disabled = false; return; }
     const semanas = agruparSemanas(diasOrdenados, p.horasNormales || LIMITE_SEMANAL_DEFAULT);
     const meses = agruparMeses(semanas);
 
@@ -2957,7 +2967,7 @@ document.getElementById('btnExportar').addEventListener('click', async ()=>{
     showToast('No se pudo generar el PDF. Prueba el CSV mientras tanto.');
     console.error(err);
   }finally{
-    btn.textContent = original;
+    btn.innerHTML = originalHTML;
     btn.disabled = false;
   }
 });
