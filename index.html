@@ -610,6 +610,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
   [data-theme="dark"] .he-range-display{ color:#FF4444; }
   #modalHERange{ width:100%; accent-color:#CC0000; }
+  .he-stepper{ display:flex; align-items:center; justify-content:center; gap:10px; margin-top:8px; }
+  .he-stepper button{
+    width:40px; height:40px; border-radius:50%; border:2px solid var(--line);
+    background:var(--card); color:var(--ink); font-size:22px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:transform .1s ease, border-color .1s ease; padding:0; line-height:1;
+    -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+  }
+  .he-stepper button:active{ transform:scale(.9); border-color:#CC0000; }
+  [data-theme="dark"] .he-stepper button{ background:#2A2A40; color:#E8E8F0; border-color:#3A3A55; }
+  [data-theme="dark"] .he-stepper button:active{ border-color:#FF4444; }
 
   /* ---------- Popover dropdown de HE manual (estilo foto1) ---------- */
   .he-popover{
@@ -1145,6 +1156,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       <label>Duración de la hora extra</label>
       <div class="he-range-display" id="modalHEDisplay">0 min</div>
       <input type="range" id="modalHERange" min="1" max="480" step="1" value="30">
+      <div class="he-stepper">
+        <button type="button" id="heStepMenos">−</button>
+        <button type="button" id="heStepMas">+</button>
+      </div>
       <div class="hint">Desde 1 minuto hasta 8 horas extra</div>
     </div>
   </div>
@@ -2450,17 +2465,52 @@ function setLadoModalHE(lado){
 hePopover.querySelectorAll('.he-lado-btn').forEach(btn=>{
   btn.addEventListener('click', ()=> setLadoModalHE(btn.dataset.lado));
 });
+// Haptic: AudioContext compatible con iPhone
+let hapticCtx = null;
+function hapticTick(){
+  try{
+    if(!hapticCtx) hapticCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = hapticCtx.createOscillator();
+    const gain = hapticCtx.createGain();
+    osc.connect(gain); gain.connect(hapticCtx.destination);
+    osc.frequency.value = 180; osc.type = 'sine';
+    gain.gain.setValueAtTime(0.15, hapticCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, hapticCtx.currentTime + 0.04);
+    osc.start(hapticCtx.currentTime); osc.stop(hapticCtx.currentTime + 0.04);
+  }catch(e){}
+}
 let heLastVibMin = -1;
 modalHERange.addEventListener('input', e=>{
   const val = +e.target.value;
   modalHEDisplay.textContent = fmtMinutosHE(val);
-  // Vibrar cada 30 minutos
   const slot30 = Math.floor(val / 30);
-  if(slot30 !== heLastVibMin && navigator.vibrate){
-    heLastVibMin = slot30;
-    navigator.vibrate(12);
-  }
+  if(slot30 !== heLastVibMin){ heLastVibMin = slot30; hapticTick(); }
 });
+
+// Botonera +/− minuto a minuto con repetición rápida al mantener
+function heStep(delta){
+  let val = Math.max(1, Math.min(480, +modalHERange.value + delta));
+  modalHERange.value = val;
+  modalHEDisplay.textContent = fmtMinutosHE(val);
+  const slot30 = Math.floor(val / 30);
+  if(slot30 !== heLastVibMin){ heLastVibMin = slot30; hapticTick(); }
+}
+function setupStepper(btnId, delta){
+  const btn = document.getElementById(btnId);
+  let iv = null, timeout = null;
+  function start(e){
+    e.preventDefault();
+    heStep(delta);
+    timeout = setTimeout(()=>{ iv = setInterval(()=> heStep(delta), 60); }, 350);
+  }
+  function stop(){ clearTimeout(timeout); clearInterval(iv); iv = null; timeout = null; }
+  btn.addEventListener('pointerdown', start);
+  btn.addEventListener('pointerup', stop);
+  btn.addEventListener('pointerleave', stop);
+  btn.addEventListener('pointercancel', stop);
+}
+setupStepper('heStepMenos', -1);
+setupStepper('heStepMas', 1);
 
 // Cierra el popover al hacer click fuera o en Escape
 function cerrarPopoverHE(){
