@@ -1720,9 +1720,42 @@ function horarioSugerido(fecha, p){
   return HORAS_SEMANA_TIPO[tipoBase][dow] || null;
 }
 
+// Helpers para heManualArr (soporta HE en entrada Y salida simultáneamente)
+function getHEArr(dia){
+  // Migración: datos antiguos con heManual objeto → heManualArr
+  if(dia.heManual && !dia.heManualArr){
+    if(dia.heManual.minutos > 0){
+      dia.heManualArr = [dia.heManual];
+    } else {
+      dia.heManualArr = [];
+    }
+    delete dia.heManual;
+  }
+  if(!dia.heManualArr) dia.heManualArr = [];
+  return dia.heManualArr;
+}
+function getHEByLado(dia, lado){
+  return getHEArr(dia).find(h => h.lado === lado) || null;
+}
+function setHEByLado(dia, lado, minutos, timeAdjusted){
+  const arr = getHEArr(dia);
+  const idx = arr.findIndex(h => h.lado === lado);
+  const entry = { lado, minutos, timeAdjusted };
+  if(idx >= 0){ arr[idx] = entry; } else { arr.push(entry); }
+}
+function removeHEByLado(dia, lado){
+  const arr = getHEArr(dia);
+  const idx = arr.findIndex(h => h.lado === lado);
+  if(idx >= 0) arr.splice(idx, 1);
+  if(arr.length === 0) delete dia.heManualArr;
+}
+function totalHEMinutos(dia){
+  return getHEArr(dia).reduce((s, h) => s + (h.minutos > 0 ? h.minutos : 0), 0);
+}
+
 // Agrupa los días (ya ordenados) en semanas Lun-Dom y calcula horas ordinarias/extra
 // respetando el tope semanal y el tope diario de 2 hrs extra.
-// IMPORTANTE: las horas extras manuales (dia.heManual.minutos) SIEMPRE se cuentan
+// IMPORTANTE: las horas extras manuales (dia.heManualArr) SIEMPRE se cuentan
 // como extraordinarias, nunca se absorben en ordinarias.
 // Si timeAdjusted=true, la hora ya fue modificada y HE está incluida en horasBase.
 // Si timeAdjusted no existe (datos antiguos), HE se suma por fuera.
@@ -1741,13 +1774,16 @@ function agruparSemanas(dias, limiteSemanal){
     const rows = items.map(d=>{
       const esTrabajo = TIPOS_CON_HORARIO.includes(d.tipo || 'trabajo');
       const horasBase = esTrabajo ? calcHoras(d.inicio, d.fin) : 0;
-      // HE manual (cargada a mano en entrada o salida)
-      const he = d.heManual;
-      const heManualMin = (he && he.minutos > 0) ? he.minutos : 0;
+      // HE manual total (suma de entrada + salida si ambas existen)
+      const heArr = getHEArr(d);
+      const heManualMin = heArr.reduce((s, h) => s + (h.minutos > 0 ? h.minutos : 0), 0);
       const heManualHrs = heManualMin / 60;
 
+      // Verificar si alguna HE tiene timeAdjusted
+      const anyTimeAdjusted = heArr.some(h => h.timeAdjusted);
+
       let horas, horasBaseSinHE;
-      if(heManualHrs > 0 && he && he.timeAdjusted){
+      if(heManualHrs > 0 && anyTimeAdjusted){
         // Datos nuevos: la hora ya fue auto-ajustada, HE está incluida en horasBase
         horas = horasBase;
         horasBaseSinHE = Math.max(0, horasBase - heManualHrs);
@@ -1762,7 +1798,7 @@ function agruparSemanas(dias, limiteSemanal){
       const extra = horas - ordinaria; // HE manual SIEMPRE va a extraordinarias
       acumOrdinaria += ordinaria;
       return { dia:d, horas, horasBase, ordinaria, extra,
-        heManualHrs, heManualMin, heManualLado: he ? he.lado : null,
+        heManualHrs, heManualMin, heManualLado: heArr.length ? heArr.map(h=>h.lado).join('+') : null,
         excedeDiario: horas > LIMITE_DIARIO_MAX,
         excedeExtra: extra > LIMITE_EXTRA_DIARIO + 0.001 };
     });
@@ -1986,13 +2022,14 @@ function renderSemanas(p, semanas, disabled, diasOrdenados){
       }
 
       // La semana es editable (se declaró semanaEsEditableGlobal en el scope externo)
-      // HE manual (hora extra cargada a mano): se asocia a la entrada o a la salida
-      const he = r.dia.heManual;
-      const tieneHEManual = !!(he && he.minutos > 0);
-      const heEnEntrada = tieneHEManual && he.lado === 'entrada';
-      const heEnSalida = tieneHEManual && he.lado === 'salida';
-      if(heEnEntrada) modEntrada = true;
-      if(heEnSalida) modSalida = true;
+      // HE manual (hora extra cargada a mano): puede haber en entrada y/o salida
+      const heEntrada = getHEByLado(r.dia, 'entrada');
+      const heSalida = getHEByLado(r.dia, 'salida');
+      const tieneHEEntrada = !!(heEntrada && heEntrada.minutos > 0);
+      const tieneHESalida = !!(heSalida && heSalida.minutos > 0);
+      const tieneHEManual = tieneHEEntrada || tieneHESalida;
+      if(tieneHEEntrada) modEntrada = true;
+      if(tieneHESalida) modSalida = true;
 
       let warn = '';
       if(horario && r.excedeDiario) warn += 'Excede 10 hrs/día. ';
@@ -2005,8 +2042,8 @@ function renderSemanas(p, semanas, disabled, diasOrdenados){
 
       const tieneMod = modEntrada || modSalida;
       // Punto rojo posicionado de forma absoluta (no desplaza columnas)
-      const tituloEntrada = heEnEntrada ? `Hora extra manual: +${fmtMinutosHE(he.minutos)} en la entrada` : 'Hora entrada modificada';
-      const tituloSalida = heEnSalida ? `Hora extra manual: +${fmtMinutosHE(he.minutos)} en la salida` : 'Hora salida modificada';
+      const tituloEntrada = tieneHEEntrada ? `Hora extra manual: +${fmtMinutosHE(heEntrada.minutos)} en la entrada` : 'Hora entrada modificada';
+      const tituloSalida = tieneHESalida ? `Hora extra manual: +${fmtMinutosHE(heSalida.minutos)} en la salida` : 'Hora salida modificada';
       const entradaDot = modEntrada ? `<span class="extra-dot" title="${tituloEntrada}"></span>` : '';
       const salidaDot = modSalida ? `<span class="extra-dot" title="${tituloSalida}"></span>` : '';
       const entradaHtml = horario
@@ -2022,8 +2059,10 @@ function renderSemanas(p, semanas, disabled, diasOrdenados){
       }else if(semanaEsEditableGlobal){
         // Semana editable: mostrar horas + botón para cargar HE manual (entrada o salida)
         // r.horas ya incluye la HE manual (gracias al fix en agruparSemanas)
-        const heLadoLabel = heEnEntrada ? 'entrada' : 'salida';
-        const heBadge = tieneHEManual ? `<span class="extra" style="color:#CC0000">+${fmtMinutosHE(he.minutos)} HE (${heLadoLabel})</span>` : '';
+        const heBadges = [];
+        if(tieneHEEntrada) heBadges.push(`<span class="extra" style="color:#CC0000">+${fmtMinutosHE(heEntrada.minutos)} HE (ent.)</span>`);
+        if(tieneHESalida) heBadges.push(`<span class="extra" style="color:#CC0000">+${fmtMinutosHE(heSalida.minutos)} HE (sal.)</span>`);
+        const heBadge = heBadges.join('');
         const extraBadge = r.extra>0.001 && !tieneHEManual ? `<span class="extra">+${fmtHoras(r.extra)} ext.</span>` : '';
         hsContent = `${fmtHoras(r.horas)}${heBadge}${extraBadge}<button type="button" class="he-btn${tieneHEManual?' has-value':''}" data-idx="${idx}" ${disabled?'disabled':''}>${tieneHEManual?'Editar HE':'+ HE'}</button>`;
       }else{
@@ -2457,10 +2496,23 @@ let heModalLado = 'entrada';
 
 function setLadoModalHE(lado){
   heModalLado = lado;
-  // Solo actúa sobre los botones dentro del popover (no sobre otros .he-lado-btn si los hubiera)
   hePopover.querySelectorAll('.he-lado-btn').forEach(btn=>{
     btn.classList.toggle('active', btn.dataset.lado === lado);
   });
+  // Si hay modal abierto, cargar valor del lado seleccionado
+  if(heModalIdx !== null){
+    const p = getActiva();
+    if(p){
+      const dia = p.dias[heModalIdx];
+      const existente = getHEByLado(dia, lado);
+      const minutos = existente && existente.minutos > 0 ? existente.minutos : 30;
+      modalHERange.value = minutos;
+      heLastVibMin = Math.floor(minutos / 30);
+      modalHEDisplay.textContent = fmtMinutosHE(minutos);
+      document.getElementById('modalHEQuitar').style.display = existente ? 'flex' : 'none';
+      hePopTitulo.textContent = existente ? 'Editar hora extra' : 'Agregar hora extra';
+    }
+  }
 }
 hePopover.querySelectorAll('.he-lado-btn').forEach(btn=>{
   btn.addEventListener('click', ()=> setLadoModalHE(btn.dataset.lado));
@@ -2593,8 +2645,7 @@ function abrirModalHE(idx, anchorEl){
   if(!p || p.cerrada) return;
   heModalIdx = idx;
   const dia = p.dias[idx];
-  const existente = dia.heManual;
-  setLadoModalHE(existente ? existente.lado : 'entrada');
+  const existente = getHEByLado(dia, heModalLado);
   const minutos = existente && existente.minutos > 0 ? existente.minutos : 30;
   modalHERange.value = minutos;
   heLastVibMin = Math.floor(minutos / 30);
@@ -2602,6 +2653,7 @@ function abrirModalHE(idx, anchorEl){
   // Cargar horario actual del día en los inputs del popover
   hePopInicio.value = dia.inicio || '';
   hePopFin.value = dia.fin || '';
+  const totalMin = totalHEMinutos(dia);
   hePopTitulo.textContent = existente ? 'Editar hora extra' : 'Agregar hora extra';
   document.getElementById('modalHEQuitar').style.display = existente ? 'flex' : 'none';
   hePopover.style.display = 'block';
@@ -2638,7 +2690,7 @@ document.getElementById('modalHEQuitar').addEventListener('click', ()=>{
   const p = getActiva();
   if(p && !p.cerrada && heModalIdx !== null){
     const dia = p.dias[heModalIdx];
-    const he = dia.heManual;
+    const he = getHEByLado(dia, heModalLado);
     // Revertir el ajuste de hora solo si fue auto-ajustada
     if(he && he.timeAdjusted){
       if(he.lado === 'salida' && dia.fin){
@@ -2647,7 +2699,7 @@ document.getElementById('modalHEQuitar').addEventListener('click', ()=>{
         dia.inicio = sumarMinutos(dia.inicio, he.minutos);
       }
     }
-    delete dia.heManual;
+    removeHEByLado(dia, heModalLado);
     save();
   }
   cerrarPopoverHE();
@@ -2660,8 +2712,18 @@ document.getElementById('modalHEConfirm').addEventListener('click', ()=>{
   if(!p || p.cerrada || heModalIdx === null){ cerrarPopoverHE(); return; }
   const minutos = +modalHERange.value;
   const dia = p.dias[heModalIdx];
+
+  // Si ya existía HE en este lado, revertir el ajuste anterior antes de aplicar el nuevo
+  const existente = getHEByLado(dia, heModalLado);
+  if(existente && existente.timeAdjusted){
+    if(existente.lado === 'salida' && dia.fin){
+      dia.fin = restarMinutos(dia.fin, existente.minutos);
+    } else if(existente.lado === 'entrada' && dia.inicio){
+      dia.inicio = sumarMinutos(dia.inicio, existente.minutos);
+    }
+  }
+
   let timeAdjusted = false;
-  // Ajustar automáticamente la hora de entrada o salida según los minutos de HE
   if(heModalLado === 'salida' && dia.fin){
     dia.fin = sumarMinutos(dia.fin, minutos);
     timeAdjusted = true;
@@ -2669,8 +2731,8 @@ document.getElementById('modalHEConfirm').addEventListener('click', ()=>{
     dia.inicio = restarMinutos(dia.inicio, minutos);
     timeAdjusted = true;
   }
-  p.dias[heModalIdx].heManual = { lado: heModalLado, minutos, timeAdjusted };
-  delete p.dias[heModalIdx].extraManual;
+  setHEByLado(dia, heModalLado, minutos, timeAdjusted);
+  delete dia.extraManual;
   save();
   cerrarPopoverHE();
   render();
@@ -2865,12 +2927,12 @@ document.getElementById('btnExportar').addEventListener('click', async ()=>{
             const etiqueta = tipo==='trabajo' ? `${wk} ${dm}` : `${wk} ${dm} (${info.label})`;
             // r.extra ya incluye tanto la HE manual como el excedente de horario real.
             // Para anotar visualmente la HE manual en inicio/fin:
-            const heDia = r.dia.heManual;
-            const heMin = (heDia && heDia.minutos > 0) ? heDia.minutos : 0;
-            const heEnEntradaPdf = heMin > 0 && heDia.lado === 'entrada';
-            const heEnSalidaPdf = heMin > 0 && heDia.lado === 'salida';
-            const inicioTxt = heEnEntradaPdf ? `${r.dia.inicio||''} (+${fmtMinutosHE(heMin)})` : (r.dia.inicio||'');
-            const finTxt = heEnSalidaPdf ? `${r.dia.fin||''} (+${fmtMinutosHE(heMin)})` : (r.dia.fin||'');
+            const heEntradaPdf = getHEByLado(r.dia, 'entrada');
+            const heSalidaPdf = getHEByLado(r.dia, 'salida');
+            const heEnEntradaMin = (heEntradaPdf && heEntradaPdf.minutos > 0) ? heEntradaPdf.minutos : 0;
+            const heEnSalidaMin = (heSalidaPdf && heSalidaPdf.minutos > 0) ? heSalidaPdf.minutos : 0;
+            const inicioTxt = heEnEntradaMin > 0 ? `${r.dia.inicio||''} (+${fmtMinutosHE(heEnEntradaMin)})` : (r.dia.inicio||'');
+            const finTxt = heEnSalidaMin > 0 ? `${r.dia.fin||''} (+${fmtMinutosHE(heEnSalidaMin)})` : (r.dia.fin||'');
             bodyRows.push([etiqueta, inicioTxt, finTxt, fmtHoras(r.horas), fmtHoras(r.ordinaria), fmtHoras(r.extra)]);
           }
         }else{
@@ -2900,11 +2962,9 @@ document.getElementById('btnExportar').addEventListener('click', async ()=>{
             const fechaFila = addDays(sem.lunes, data.row.index);
             const r = diasMap[fechaFila];
             const mod = tiemposModificados[fechaFila];
-            const heFila = r && r.dia.heManual;
-            const heFilaMin = (heFila && heFila.minutos > 0) ? heFila.minutos : 0;
-            const heFilaEntrada = heFilaMin > 0 && heFila.lado === 'entrada';
-            const heFilaSalida = heFilaMin > 0 && heFila.lado === 'salida';
-            const tieneHE = heFilaMin > 0;
+            const heFilaEntrada = getHEByLado(r.dia, 'entrada');
+            const heFilaSalida = getHEByLado(r.dia, 'salida');
+            const tieneHE = (heFilaEntrada && heFilaEntrada.minutos > 0) || (heFilaSalida && heFilaSalida.minutos > 0);
             if(mod || tieneHE){
               // Columna 0: día en rojo si tiene modificación o HE manual
               if(data.column.index===0){
@@ -2912,12 +2972,12 @@ document.getElementById('btnExportar').addEventListener('click', async ()=>{
                 data.cell.styles.fontStyle = 'bold';
               }
               // Columna 1: inicio en rojo (modificado o con HE manual en la entrada)
-              if(data.column.index===1 && ((mod && mod.entrada) || heFilaEntrada)){
+              if(data.column.index===1 && ((mod && mod.entrada) || (heFilaEntrada && heFilaEntrada.minutos > 0))){
                 data.cell.styles.textColor = [200,0,0];
                 data.cell.styles.fontStyle = 'bold';
               }
               // Columna 2: fin en rojo (modificado o con HE manual en la salida)
-              if(data.column.index===2 && ((mod && mod.salida) || heFilaSalida)){
+              if(data.column.index===2 && ((mod && mod.salida) || (heFilaSalida && heFilaSalida.minutos > 0))){
                 data.cell.styles.textColor = [200,0,0];
                 data.cell.styles.fontStyle = 'bold';
               }
@@ -3069,9 +3129,11 @@ document.getElementById('btnCSV').addEventListener('click', async ()=>{
       const isFer = esFeriadoEfectivo(r.dia);
       const tipo = r.dia.tipo || 'trabajo';
       const tipoLabel = tipoInfo(tipo).label;
-      const heDia = r.dia.heManual;
-      const heMin = (heDia && heDia.minutos > 0) ? heDia.minutos : 0;
-      rows.push([mesLabel(r.dia.fecha.slice(0,7)), 'Semana '+(i+1), wk, dm, tipoLabel, r.dia.inicio||'', r.dia.fin||'', fmtHoras(r.horas), fmtHoras(r.ordinaria), fmtHoras(r.extra), heMin>0 ? fmtHoras(heMin/60) : '', heMin>0 ? (heDia.lado==='entrada'?'Entrada':'Salida') : '', isFer ? nombreFeriadoEfectivo(r.dia) : '', isFer ? (r.dia.feriadoValor||0) : '']);
+      const heEntradaCsv = getHEByLado(r.dia, 'entrada');
+      const heSalidaCsv = getHEByLado(r.dia, 'salida');
+      const heMinCsv = ((heEntradaCsv && heEntradaCsv.minutos > 0) ? heEntradaCsv.minutos : 0) + ((heSalidaCsv && heSalidaCsv.minutos > 0) ? heSalidaCsv.minutos : 0);
+      const heLadoCsv = (heEntradaCsv && heEntradaCsv.minutos > 0 ? 'Entrada' : '') + (heEntradaCsv && heEntradaCsv.minutos > 0 && heSalidaCsv && heSalidaCsv.minutos > 0 ? '+' : '') + (heSalidaCsv && heSalidaCsv.minutos > 0 ? 'Salida' : '');
+      rows.push([mesLabel(r.dia.fecha.slice(0,7)), 'Semana '+(i+1), wk, dm, tipoLabel, r.dia.inicio||'', r.dia.fin||'', fmtHoras(r.horas), fmtHoras(r.ordinaria), fmtHoras(r.extra), heMinCsv>0 ? fmtHoras(heMinCsv/60) : '', heLadoCsv, isFer ? nombreFeriadoEfectivo(r.dia) : '', isFer ? (r.dia.feriadoValor||0) : '']);
     });
   });
   rows.push([]);
