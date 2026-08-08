@@ -466,7 +466,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   button:active{transform:scale(.96);}
   button.primary{background:var(--amber); color:#241505;}
   button.danger{background:var(--danger);}
-  button.ghost{background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.25);}
+  button.ghost{background:rgba(0,0,0,.06); color:var(--ink); border:1px solid var(--line);}
+  header button.ghost{background:transparent; color:#fff; border:none;}
+  .toolbar button{font-size:11px; padding:5px 8px; transition:transform .15s ease, opacity .15s ease;}
+  .toolbar button:hover{transform:scale(1.08);}
+  .btn-icon-text{display:inline-flex; align-items:center; gap:5px;}
+  .btn-icon-text [class^="icon-"]{display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; flex-shrink:0;}
+  .btn-icon-text [class^="icon-"] svg{width:16px; height:16px; display:block;}
+  [data-theme="dark"] button.ghost{background:transparent; color:#fff; border:none;}
   button.small{padding:7px 10px; font-size:12px; border-radius:8px;}
   button:disabled{opacity:.4; cursor:not-allowed;}
 
@@ -580,17 +587,75 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .dia-label.dia-mod .wk{ color:#CC0000 !important; }
   [data-theme="dark"] .dia-label.dia-mod{ color:#FF4444 !important; }
   [data-theme="dark"] .dia-label.dia-mod .wk{ color:#FF4444 !important; }
-  .he-input-wrap{display:flex; align-items:center; gap:3px; margin-top:2px;}
-  .he-input{
-    width:38px; padding:2px 3px; font-size:11px; text-align:center;
-    border-radius:5px; border:1px solid var(--line); background:#F7F9FA;
-    color:var(--navy); font-weight:700;
+  .he-btn{
+    display:block; margin-top:3px; font-size:9.5px; font-weight:700;
+    color:#CC0000; background:#FFF0F0; border:1px solid #F3C6C6;
+    border-radius:8px; padding:2px 7px; cursor:pointer;
   }
-  .he-input:focus{outline:none; border-color:#CC0000; box-shadow:0 0 0 2px rgba(204,0,0,0.15);}
-  .he-input.has-value{ color:#CC0000; border-color:#CC0000; }
-  [data-theme="dark"] .he-input{ background:#22223A; color:#C8D8F0; border-color:#3A3A55; }
-  [data-theme="dark"] .he-input.has-value{ color:#FF4444; border-color:#FF4444; }
-  .he-label{font-size:8.5px; color:var(--ink-soft); font-weight:600; white-space:nowrap;}
+  .he-btn.has-value{ background:#CC0000; color:#fff; border-color:#CC0000; }
+  [data-theme="dark"] .he-btn{ background:#3A1F1F; color:#FF8888; border-color:#5A2A2A; }
+  [data-theme="dark"] .he-btn.has-value{ background:#CC2222; color:#fff; border-color:#CC2222; }
+  .lado-selector{ display:flex; gap:6px; margin-bottom:12px; }
+  .lado-selector button{
+    flex:1; justify-content:center; background:#F7F9FA; color:var(--ink-soft);
+    border:1px solid var(--line); font-size:12.5px; padding:10px 6px; font-weight:700;
+  }
+  .lado-selector button.active{ background:#CC0000; color:#fff; border-color:#CC0000; }
+  [data-theme="dark"] .lado-selector button{ background:#22223A; color:#A0A0B8; border-color:#3A3A55; }
+  [data-theme="dark"] .lado-selector button.active{ background:#FF4444; color:#fff; border-color:#FF4444; }
+  .he-range-display{
+    text-align:center; font-size:24px; font-weight:800; color:#CC0000;
+    margin-bottom:8px;
+  }
+  [data-theme="dark"] .he-range-display{ color:#FF4444; }
+  #modalHERange{ width:100%; accent-color:#CC0000; }
+
+  /* ---------- Popover dropdown de HE manual (estilo foto1) ---------- */
+  .he-popover{
+    position:fixed; z-index:80; background:#fff; color:var(--ink);
+    border-radius:16px; box-shadow:0 14px 38px rgba(0,0,0,.28), 0 2px 6px rgba(0,0,0,.12);
+    border:1px solid var(--line); width:330px; max-width:calc(100vw - 24px);
+    padding:14px 14px 12px;
+    animation:hePopIn .16s ease-out;
+  }
+  @keyframes hePopIn{
+    from{ opacity:0; transform:translateY(-6px) scale(.98); }
+    to{ opacity:1; transform:translateY(0) scale(1); }
+  }
+  [data-theme="dark"] .he-popover{ background:#1C1C30; color:#E8E8F0; border-color:#3A3A55; }
+  .he-pop-arrow{
+    position:absolute; width:14px; height:14px; background:inherit;
+    border:1px solid var(--line); border-right:none; border-bottom:none;
+    transform:rotate(45deg); left:18px; top:-7px;
+  }
+  [data-theme="dark"] .he-pop-arrow{ border-color:#3A3A55; background:#1C1C30; }
+  .he-pop-header{
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;
+  }
+  .he-pop-header span{ font-weight:800; font-size:14.5px; }
+  .he-pop-close{
+    background:transparent; border:none; font-size:16px; color:var(--ink-soft);
+    cursor:pointer; padding:2px 6px; border-radius:6px; line-height:1;
+  }
+  .he-pop-close:hover{ background:rgba(0,0,0,.06); }
+  [data-theme="dark"] .he-pop-close:hover{ background:rgba(255,255,255,.08); }
+  .he-pop-body{ display:flex; flex-direction:column; gap:6px; }
+  .he-pop-row{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:4px; }
+  .he-pop-row .field{ margin:0; }
+  .he-pop-row .field input{ width:100%; padding:8px 10px; font-size:14px; }
+  .he-pop-divider{
+    position:relative; text-align:center; font-size:10.5px; font-weight:700;
+    color:var(--ink-soft); margin:6px 0 2px; text-transform:uppercase; letter-spacing:.5px;
+  }
+  .he-pop-divider span{ position:relative; z-index:1; background:inherit; padding:0 8px; }
+  [data-theme="dark"] .he-pop-divider span{ background:#1C1C30; }
+  .he-pop-divider:before{
+    content:''; position:absolute; top:50%; left:0; right:0; height:1px; background:var(--line);
+  }
+  .he-popover .lado-selector{ margin:6px 0 8px; }
+  .he-popover .field{ margin:0; }
+  .he-pop-actions{ display:flex; gap:6px; margin-top:12px; }
+  .he-pop-actions button{ flex:1; justify-content:center; padding:9px 8px; font-size:13px; }
   .del-btn{background:transparent; color:var(--danger); font-size:16px; padding:4px 6px; border-radius:8px; font-weight:800;}
   .add-day{width:100%; margin-top:6px; background:var(--navy); justify-content:center;}
 
@@ -694,9 +759,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     display:flex; align-items:center; gap:8px; position:relative; z-index:1; margin-top:12px;
   }
   .ajustes-bar button{
-    background:rgba(255,255,255,.14); color:#fff; border:1px solid rgba(255,255,255,.3);
+    background:transparent; color:#fff; border:none;
     padding:7px 10px; font-size:13px; border-radius:9px;
+    transition:transform .15s ease, opacity .15s ease;
   }
+  .ajustes-bar button:hover{transform:scale(1.08);}
   .ajustes-bar .font-controls{ display:flex; align-items:center; gap:4px; margin-left:auto; }
   .ajustes-bar .font-controls span{ font-size:11px; color:rgba(255,255,255,.85); min-width:32px; text-align:center; }
 
@@ -786,24 +853,103 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   [data-theme="dark"] .confirm-modal-body .confirm-name{ color:#7BA7E8; }
   .confirm-modal-body .confirm-warn{ font-size:12px; color:var(--danger); font-weight:600; }
 
-  /* ---------- Botonera de tamaño de letra: escala todo el contenido vía zoom ---------- */
-  body{ zoom: var(--zoom, 1); }
+  /* ---------- Grid Time Picker Popover ---------- */
+  .tp-overlay{
+    position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.45);
+    display:none; align-items:center; justify-content:center;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .tp-overlay.open{display:flex;}
+  .tp-popover{
+    background:#fff; border-radius:14px; width:340px; max-width:calc(100vw - 20px);
+    box-shadow:0 16px 48px rgba(0,0,0,.28), 0 2px 8px rgba(0,0,0,.12);
+    overflow:hidden; touch-action:manipulation;
+    user-select:none; -webkit-user-select:none;
+  }
+  [data-theme="dark"] .tp-popover{background:#1C1C30; box-shadow:0 16px 48px rgba(0,0,0,.6);}
+  .tp-header{
+    background:#3A3A4A; padding:10px 14px; text-align:center;
+    font-size:12px; font-weight:800; color:#fff; letter-spacing:.12em; text-transform:uppercase;
+  }
+  .tp-body{padding:12px 14px 10px; display:flex; gap:14px;}
+  .tp-digital{
+    text-align:right; font-size:42px; font-weight:700; color:#000099;
+    padding:0 16px 6px 14px; line-height:1; letter-spacing:-.02em;
+  }
+  [data-theme="dark"] .tp-digital{color:#7BA7E8;}
+  .tp-col{flex:1; display:flex; flex-direction:column; gap:6px;}
+  .tp-col-label{
+    text-align:center; font-size:10px; font-weight:800; color:#888;
+    text-transform:uppercase; letter-spacing:.1em;
+  }
+  [data-theme="dark"] .tp-col-label{color:#A0A0B8;}
+  .tp-grid{
+    display:grid; gap:5px;
+  }
+  .tp-grid.hours{grid-template-columns:repeat(4,1fr);}
+  .tp-grid.minutes{grid-template-columns:repeat(3,1fr);}
+  .tp-cell{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:6px 2px 5px; border-radius:6px; cursor:pointer;
+    background:#E8E8EC; color:#333; font-size:14px; font-weight:700;
+    transition:background .1s, color .1s; touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent; min-height:36px;
+    width:100%; box-sizing:border-box; overflow:hidden;
+  }
+  [data-theme="dark"] .tp-cell{background:#2A2A40; color:#C8C8D8;}
+  .tp-cell:active{opacity:.7;}
+  .tp-cell.sel{background:#000099; color:#fff;}
+  [data-theme="dark"] .tp-cell.sel{background:#3A6FD8; color:#fff;}
+  .tp-cell-sel-label{display:none;}
+  .tp-footer{
+    display:flex; gap:8px; padding:10px 14px 14px;}
+  .tp-footer button{
+    flex:1; padding:10px 8px; border:none; border-radius:8px;
+    font-size:13px; font-weight:800; cursor:pointer; text-transform:uppercase;
+    letter-spacing:.06em; touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .tp-btn-cancel{background:#E0E0E4; color:#555;}
+  [data-theme="dark"] .tp-btn-cancel{background:#2A2A40; color:#A0A0B8;}
+  .tp-btn-set{background:#000099; color:#fff;}
+  [data-theme="dark"] .tp-btn-set{background:#3A6FD8; color:#fff;}
+  /* Inputs de hora nativos: se muestran como botones para abrir el grid picker */
+  .td-time-wrap input[type=time]{
+    cursor:pointer; text-align:center; font-weight:700;
+  }
+  .td-time-wrap input[type=time]::-webkit-calendar-picker-indicator{display:none;}
+  .td-time-wrap input[type=time]::-moz-calendar-picker-indicator{display:none;}
+  #modalDiaInicio::-webkit-calendar-picker-indicator,
+  #modalDiaFin::-webkit-calendar-picker-indicator,
+  #hePopInicio::-webkit-calendar-picker-indicator,
+  #hePopFin::-webkit-calendar-picker-indicator{display:none;}
+  #modalDiaInicio::-moz-calendar-picker-indicator,
+  #modalDiaFin::-moz-calendar-picker-indicator,
+  #hePopInicio::-moz-calendar-picker-indicator,
+  #hePopFin::-moz-calendar-picker-indicator{display:none;}
+</style>
+<!-- Iconos SVG inline para botones del toolbar -->
+<style>
+  .icon-pdf{background:#CC0000; border-radius:4px;}
+  .icon-pdf svg path,.icon-pdf svg rect{fill:#fff;}
+  .icon-csv{background:#217346; border-radius:4px;}
+  .icon-csv svg path,.icon-csv svg rect{fill:#fff;}
+  .icon-wa svg path{fill:#25D366;}
 </style>
 </head>
 <body>
 
 <header>
   <div class="header-content">
-  <h1>Registro de Días Trabajados - Horas Extras y Festivos</h1>
+  <h1>Registro de Días Trabajados - Horas Extras y Feriados</h1>
   <p class="subline">Jornada ordinaria 42 hrs/semana · Ley 21.561</p>
   <div class="toolbar">
-    <button class="primary" id="btnNueva">+ Nueva planilla</button>
-    <button class="ghost" id="btnCerrar">🔒 Cerrar planilla</button>
-    <button class="danger" id="btnEliminar">Eliminar</button>
-    <button class="ghost" id="btnExportar">↓ PDF</button>
-    <button class="ghost" id="btnCSV">↓ CSV diario/semanal/mensual</button>
-    <button class="ghost" id="btnWhatsapp">📱 WhatsApp</button>
-    <button class="ghost" id="btnAjustes">⚙️ Ajustes</button>
+    <button class="ghost btn-icon-text" id="btnNueva" style="color:#fff;"><span class="icon-nueva"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/><line x1="8" y1="9" x2="11" y2="9"/></svg></span>Nueva planilla</button>
+    <button class="ghost btn-icon-text" id="btnEliminar" style="color:#fff;"><span class="icon-elim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></span>Eliminar</button>
+    <button class="ghost btn-icon-text" id="btnExportar" style="color:#fff;"><span class="icon-pdf"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h5v7h7v9H6z"/><text x="7.5" y="18" font-size="5" font-weight="800" fill="#fff" font-family="sans-serif">PDF</text></svg></span>Exportar PDF</button>
+    <button class="ghost btn-icon-text" id="btnCSV" style="color:#fff;"><span class="icon-csv"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h5v7h7v9H6z"/><text x="6.5" y="18" font-size="4.5" font-weight="800" fill="#fff" font-family="sans-serif">CSV</text></svg></span>Exportar CSV</button>
+    <button class="ghost btn-icon-text" id="btnWhatsapp" style="color:#fff;"><span class="icon-wa" style="color:#25D366;"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zm-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884zm8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></span>Enviar WhatsApp</button>
+    <button class="ghost" id="btnAjustes" style="color:#fff;">⚙️ Ajustes</button>
   </div>
   <div class="ajustes-bar">
     <button id="btnTema">🌙 Modo oscuro</button>
@@ -845,8 +991,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         <div class="field">
           <label>Sección</label>
           <select id="fSeccion">
-            <option value="LUN/PRODUCCION">SECCIÓN LUN/PRODUCCIÓN</option>
-            <option value="LUN/SOPORTE">SECCIÓN LUN/SOPORTE</option>
+            <option value="LUN/PRODUCCION">LUN/PRODUCCION</option>
+            <option value="LUN/SOPORTE">LUN/SOPORTE</option>
           </select>
         </div>
         <div class="field"><label>Centro de costo</label><input id="fCentroCosto" type="text" placeholder="Ej: 726"></div>
@@ -977,6 +1123,37 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   </div>
 </div>
 
+<!-- Popover dropdown de HE manual (reemplaza al modal full-screen) -->
+<div class="he-popover" id="hePopover" style="display:none;" role="dialog" aria-modal="false">
+  <div class="he-pop-arrow" id="hePopArrow"></div>
+  <div class="he-pop-header">
+    <span id="hePopTitulo">Hora extra manual</span>
+    <button type="button" class="he-pop-close" id="hePopClose" aria-label="Cerrar">✕</button>
+  </div>
+  <div class="he-pop-body">
+    <div class="he-pop-row">
+      <div class="field"><label>Inicio de turno</label><input id="hePopInicio" type="time"></div>
+      <div class="field"><label>Fin de turno</label><input id="hePopFin" type="time"></div>
+    </div>
+    <div class="he-pop-divider"><span>Hora extra</span></div>
+    <div class="lado-selector">
+      <button type="button" class="he-lado-btn" data-lado="entrada">🕐 Entrada</button>
+      <button type="button" class="he-lado-btn" data-lado="salida">🕐 Salida</button>
+    </div>
+    <div class="field">
+      <label>Duración de la hora extra</label>
+      <div class="he-range-display" id="modalHEDisplay">0 min</div>
+      <input type="range" id="modalHERange" min="1" max="480" step="1" value="30">
+      <div class="hint">Desde 1 minuto hasta 8 horas extra</div>
+    </div>
+  </div>
+  <div class="he-pop-actions">
+    <button class="ghost" id="modalHEQuitar" style="display:none;">Quitar HE</button>
+    <button class="ghost" id="modalHECancel">Cancelar</button>
+    <button class="primary" id="modalHEConfirm">Guardar</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalOverlayPatron">
   <div class="modal">
     <h3>Generar semana según lo requerido</h3>
@@ -1054,6 +1231,28 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     <div class="modal-actions">
       <button class="ghost" id="confirmCancel">Cancelar</button>
       <button class="danger" id="confirmDelete">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Grid Time Picker Popover -->
+<div class="tp-overlay" id="tpOverlay">
+  <div class="tp-popover">
+    <div class="tp-header">SELECCIONAR HORA</div>
+    <div class="tp-digital" id="tpDigital">-- : --</div>
+    <div class="tp-body">
+      <div class="tp-col">
+        <div class="tp-col-label">Hora</div>
+        <div class="tp-grid hours" id="tpHoursGrid"></div>
+      </div>
+      <div class="tp-col">
+        <div class="tp-col-label">Minuto</div>
+        <div class="tp-grid minutes" id="tpMinutesGrid"></div>
+      </div>
+    </div>
+    <div class="tp-footer">
+      <button class="tp-btn-cancel" id="tpCancel">Cancelar</button>
+      <button class="tp-btn-set" id="tpSet">Establecer hora</button>
     </div>
   </div>
 </div>
@@ -1186,7 +1385,20 @@ let state = load();
 function load(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw) return JSON.parse(raw);
+    if(raw){
+      const data = JSON.parse(raw);
+      // Migración: el antiguo campo numérico "extraManual" pasa al nuevo formato
+      // { lado, minutos }, que permite indicar si la HE fue en la entrada o en la salida.
+      (data.planillas||[]).forEach(p=>{
+        (p.dias||[]).forEach(d=>{
+          if(d.extraManual > 0 && !d.heManual){
+            d.heManual = { lado:'salida', minutos: Math.round(d.extraManual*60) };
+          }
+          delete d.extraManual;
+        });
+      });
+      return data;
+    }
   }catch(e){}
   return { planillas: [], activaId: null };
 }
@@ -1194,7 +1406,102 @@ function save(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); 
 function uid(){ return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
 function getActiva(){ return state.planillas.find(p => p.id === state.activaId) || null; }
 
-// ---------- Preferencias de la app (tema y tamaño de letra) — separadas de las planillas ----------
+// ---------- Grid Time Picker ----------
+const tpOverlay = document.getElementById('tpOverlay');
+const tpDigital = document.getElementById('tpDigital');
+const tpHoursGrid = document.getElementById('tpHoursGrid');
+const tpMinutesGrid = document.getElementById('tpMinutesGrid');
+let tpHour = null, tpMinute = null;
+let tpCallback = null; // función a llamar con 'HH:MM' al confirmar
+let tpAnchor = null;   // input o elemento que disparó el picker
+
+// Generar celdas de horas (00-23)
+(function buildTPGrids(){
+  for(let h = 0; h < 24; h++){
+    const cell = document.createElement('div');
+    cell.className = 'tp-cell';
+    cell.dataset.h = h;
+    cell.textContent = String(h).padStart(2,'0');
+    cell.addEventListener('pointerdown', e => { e.preventDefault(); selectTPHour(h); });
+    tpHoursGrid.appendChild(cell);
+  }
+  for(let m = 0; m < 60; m += 5){
+    const cell = document.createElement('div');
+    cell.className = 'tp-cell';
+    cell.dataset.m = m;
+    cell.textContent = String(m).padStart(2,'0');
+    cell.addEventListener('pointerdown', e => { e.preventDefault(); selectTPMinute(m); });
+    tpMinutesGrid.appendChild(cell);
+  }
+})();
+
+function selectTPHour(h){
+  tpHour = h;
+  refreshTPGrid();
+  updateTPDigital();
+}
+function selectTPMinute(m){
+  tpMinute = m;
+  refreshTPGrid();
+  updateTPDigital();
+}
+function refreshTPGrid(){
+  tpHoursGrid.querySelectorAll('.tp-cell').forEach(c => {
+    const isSel = +c.dataset.h === tpHour;
+    c.classList.toggle('sel', isSel);
+  });
+  tpMinutesGrid.querySelectorAll('.tp-cell').forEach(c => {
+    const isSel = +c.dataset.m === tpMinute;
+    c.classList.toggle('sel', isSel);
+  });
+}
+function updateTPDigital(){
+  if(tpHour === null || tpMinute === null){
+    tpDigital.textContent = '-- : --';
+  } else {
+    tpDigital.textContent = String(tpHour).padStart(2,'0') + ' : ' + String(tpMinute).padStart(2,'0');
+  }
+}
+function openTimePicker(currentValue, callback){
+  tpCallback = callback;
+  if(currentValue && currentValue.includes(':')){
+    const [h,m] = currentValue.split(':').map(Number);
+    tpHour = h; tpMinute = m;
+  } else {
+    tpHour = null; tpMinute = null;
+  }
+  refreshTPGrid();
+  updateTPDigital();
+  tpOverlay.classList.add('open');
+}
+function closeTimePicker(){
+  tpOverlay.classList.remove('open');
+  tpCallback = null;
+}
+document.getElementById('tpCancel').addEventListener('click', closeTimePicker);
+document.getElementById('tpSet').addEventListener('click', ()=>{
+  if(tpHour !== null && tpMinute !== null && tpCallback){
+    const val = String(tpHour).padStart(2,'0') + ':' + String(tpMinute).padStart(2,'0');
+    tpCallback(val);
+  }
+  closeTimePicker();
+});
+tpOverlay.addEventListener('click', e =>{ if(e.target === tpOverlay) closeTimePicker(); });
+document.addEventListener('keydown', e =>{ if(e.key === 'Escape' && tpOverlay.classList.contains('open')) closeTimePicker(); });
+
+// Conectar inputs de hora de modales al grid picker
+function connectTimeInputToGrid(inputId){
+  const el = document.getElementById(inputId);
+  if(!el) return;
+  el.addEventListener('click', e=>{ e.preventDefault(); openTimePicker(el.value, val=>{ el.value = val; el.dispatchEvent(new Event('change')); }); });
+  el.addEventListener('mousedown', e=> e.preventDefault());
+}
+connectTimeInputToGrid('modalDiaInicio');
+connectTimeInputToGrid('modalDiaFin');
+connectTimeInputToGrid('hePopInicio');
+connectTimeInputToGrid('hePopFin');
+
+// ---------- Preferencias de la app (tema y tamaño de letra) ----------
 const PREFS_KEY = 'registroHorasExtrasPrefs';
 function cargarPrefs(){
   try{
@@ -1284,7 +1591,26 @@ function calcHoras(inicio, fin){
   if(diff <= 0) diff += 24*60;
   return diff/60;
 }
+function sumarMinutos(timeStr, min){
+  const [h,m] = timeStr.split(':').map(Number);
+  let total = h*60 + m + min;
+  total = ((total % 1440) + 1440) % 1440; // maneja paso de medianoche
+  const nh = Math.floor(total/60);
+  const nm = total % 60;
+  return String(nh).padStart(2,'0') + ':' + String(nm).padStart(2,'0');
+}
+function restarMinutos(timeStr, min){
+  return sumarMinutos(timeStr, -min);
+}
 function fmtHoras(h){ return (Math.round(h*100)/100).toString().replace(/\.0$/,''); }
+function fmtMinutosHE(min){
+  min = Math.round(min);
+  const h = Math.floor(min/60);
+  const m = min % 60;
+  if(h===0) return `${m} min`;
+  if(m===0) return `${h} h`;
+  return `${h} h ${m} min`;
+}
 function fmtFecha(dateStr){
   const d = new Date(dateStr + 'T00:00:00');
   const wk = DIAS_SEMANA[d.getDay()];
@@ -1380,6 +1706,10 @@ function horarioSugerido(fecha, p){
 
 // Agrupa los días (ya ordenados) en semanas Lun-Dom y calcula horas ordinarias/extra
 // respetando el tope semanal y el tope diario de 2 hrs extra.
+// IMPORTANTE: las horas extras manuales (dia.heManual.minutos) SIEMPRE se cuentan
+// como extraordinarias, nunca se absorben en ordinarias.
+// Si timeAdjusted=true, la hora ya fue modificada y HE está incluida en horasBase.
+// Si timeAdjusted no existe (datos antiguos), HE se suma por fuera.
 function agruparSemanas(dias, limiteSemanal){
   const semanas = {};
   const orden = [];
@@ -1394,12 +1724,29 @@ function agruparSemanas(dias, limiteSemanal){
     let acumOrdinaria = 0;
     const rows = items.map(d=>{
       const esTrabajo = TIPOS_CON_HORARIO.includes(d.tipo || 'trabajo');
-      const horas = esTrabajo ? calcHoras(d.inicio, d.fin) : 0;
+      const horasBase = esTrabajo ? calcHoras(d.inicio, d.fin) : 0;
+      // HE manual (cargada a mano en entrada o salida)
+      const he = d.heManual;
+      const heManualMin = (he && he.minutos > 0) ? he.minutos : 0;
+      const heManualHrs = heManualMin / 60;
+
+      let horas, horasBaseSinHE;
+      if(heManualHrs > 0 && he && he.timeAdjusted){
+        // Datos nuevos: la hora ya fue auto-ajustada, HE está incluida en horasBase
+        horas = horasBase;
+        horasBaseSinHE = Math.max(0, horasBase - heManualHrs);
+      } else {
+        // Datos antiguos: HE NO está en horasBase, se suma aparte
+        horas = horasBase + heManualHrs;
+        horasBaseSinHE = horasBase;
+      }
+
       const restante = Math.max(0, limiteSemanal - acumOrdinaria);
-      const ordinaria = Math.min(horas, restante);
-      const extra = horas - ordinaria;
+      const ordinaria = Math.min(horasBaseSinHE, restante);
+      const extra = horas - ordinaria; // HE manual SIEMPRE va a extraordinarias
       acumOrdinaria += ordinaria;
-      return { dia:d, horas, ordinaria, extra,
+      return { dia:d, horas, horasBase, ordinaria, extra,
+        heManualHrs, heManualMin, heManualLado: he ? he.lado : null,
         excedeDiario: horas > LIMITE_DIARIO_MAX,
         excedeExtra: extra > LIMITE_EXTRA_DIARIO + 0.001 };
     });
@@ -1459,12 +1806,12 @@ function render(){
   if(state.planillas.length === 0){
     empty.style.display = 'block';
     body.style.display = 'none';
-    ['btnCerrar','btnEliminar','btnExportar','btnCSV','btnWhatsapp'].forEach(id=> document.getElementById(id).disabled = true);
+    ['btnEliminar','btnExportar','btnCSV','btnWhatsapp'].forEach(id=> document.getElementById(id).disabled = true);
     return;
   }
   empty.style.display = 'none';
   body.style.display = 'block';
-  ['btnCerrar','btnEliminar','btnExportar','btnCSV','btnWhatsapp'].forEach(id=> document.getElementById(id).disabled = false);
+  ['btnEliminar','btnExportar','btnCSV','btnWhatsapp'].forEach(id=> document.getElementById(id).disabled = false);
 
   // Lista editable de planillas
   const list = document.getElementById('planillaList');
@@ -1560,7 +1907,6 @@ function render(){
     lockbar.textContent = '🟢 Planilla abierta — se puede editar';
     lockbar.classList.remove('closed');
   }
-  document.getElementById('btnCerrar').textContent = disabled ? '🔓 Reabrir planilla' : '🔒 Cerrar planilla';
 
   const diasTodos = p.dias.slice().sort((a,b)=> a.fecha.localeCompare(b.fecha));
   poblarFiltroMes(diasTodos);
@@ -1624,8 +1970,13 @@ function renderSemanas(p, semanas, disabled, diasOrdenados){
       }
 
       // La semana es editable (se declaró semanaEsEditableGlobal en el scope externo)
-      // Si hay HE manual, el día también se considera con hora extra
-      const tieneHEManual = (r.dia.extraManual > 0.001);
+      // HE manual (hora extra cargada a mano): se asocia a la entrada o a la salida
+      const he = r.dia.heManual;
+      const tieneHEManual = !!(he && he.minutos > 0);
+      const heEnEntrada = tieneHEManual && he.lado === 'entrada';
+      const heEnSalida = tieneHEManual && he.lado === 'salida';
+      if(heEnEntrada) modEntrada = true;
+      if(heEnSalida) modSalida = true;
 
       let warn = '';
       if(horario && r.excedeDiario) warn += 'Excede 10 hrs/día. ';
@@ -1636,10 +1987,12 @@ function renderSemanas(p, semanas, disabled, diasOrdenados){
       const tipoPill = `<button type="button" class="tipo-pill ${info.cls}" data-fecha="${r.dia.fecha}" ${disabled?'disabled':''}>${info.emoji} ${info.label}</button>`;
       const feriadoBtn = horario ? `<button class="feriado-toggle ${isFer?'on':''}" data-idx="${idx}" ${disabled?'disabled':''}>🎉 ${isFer ? (nombreFer||'Feriado') : 'Marcar feriado'}</button>` : '';
 
-      const tieneMod = modEntrada || modSalida || tieneHEManual;
+      const tieneMod = modEntrada || modSalida;
       // Punto rojo posicionado de forma absoluta (no desplaza columnas)
-      const entradaDot = modEntrada ? '<span class="extra-dot" title="Hora entrada modificada"></span>' : '';
-      const salidaDot = modSalida ? '<span class="extra-dot" title="Hora salida modificada"></span>' : '';
+      const tituloEntrada = heEnEntrada ? `Hora extra manual: +${fmtMinutosHE(he.minutos)} en la entrada` : 'Hora entrada modificada';
+      const tituloSalida = heEnSalida ? `Hora extra manual: +${fmtMinutosHE(he.minutos)} en la salida` : 'Hora salida modificada';
+      const entradaDot = modEntrada ? `<span class="extra-dot" title="${tituloEntrada}"></span>` : '';
+      const salidaDot = modSalida ? `<span class="extra-dot" title="${tituloSalida}"></span>` : '';
       const entradaHtml = horario
         ? `<div class="td-time-wrap"><input type="time" class="${modEntrada ? 'hora-mod' : ''}" value="${r.dia.inicio||''}" data-idx="${idx}" data-field="inicio" ${disabled?'disabled':''}></div>${entradaDot}`
         : '—';
@@ -1647,15 +2000,16 @@ function renderSemanas(p, semanas, disabled, diasOrdenados){
         ? `<div class="td-time-wrap"><input type="time" class="${modSalida ? 'hora-mod' : ''}" value="${r.dia.fin||''}" data-idx="${idx}" data-field="fin" ${disabled?'disabled':''}></div>${salidaDot}`
         : '—';
 
-      // HE manual: solo para semanas editables
-      const heManualVal = r.dia.extraManual ? r.dia.extraManual : '';
-      const heHasVal = r.dia.extraManual > 0.001;
       let hsContent;
       if(!horario){
         hsContent = '—';
       }else if(semanaEsEditableGlobal){
-        // Semana editable: mostrar horas + campo HE manual
-        hsContent = `${fmtHoras(r.horas)}${heHasVal ? `<span class="extra" style="color:#CC0000">+${fmtHoras(r.dia.extraManual)} HE</span>` : ''}<div class="he-input-wrap"><span class="he-label">HE</span><input type="number" class="he-input${heHasVal?' has-value':''}" value="${heManualVal}" placeholder="0" step="0.5" min="0" max="12" data-idx="${idx}" ${disabled?'disabled':''}></div>`;
+        // Semana editable: mostrar horas + botón para cargar HE manual (entrada o salida)
+        // r.horas ya incluye la HE manual (gracias al fix en agruparSemanas)
+        const heLadoLabel = heEnEntrada ? 'entrada' : 'salida';
+        const heBadge = tieneHEManual ? `<span class="extra" style="color:#CC0000">+${fmtMinutosHE(he.minutos)} HE (${heLadoLabel})</span>` : '';
+        const extraBadge = r.extra>0.001 && !tieneHEManual ? `<span class="extra">+${fmtHoras(r.extra)} ext.</span>` : '';
+        hsContent = `${fmtHoras(r.horas)}${heBadge}${extraBadge}<button type="button" class="he-btn${tieneHEManual?' has-value':''}" data-idx="${idx}" ${disabled?'disabled':''}>${tieneHEManual?'Editar HE':'+ HE'}</button>`;
       }else{
         // Semana noche: solo horas, sin campo HE
         hsContent = `${fmtHoras(r.horas)}${r.extra>0.001 ? `<span class="extra">+${fmtHoras(r.extra)} ext.</span>` : ''}`;
@@ -1699,14 +2053,21 @@ function renderSemanas(p, semanas, disabled, diasOrdenados){
     });
   });
 
-  cont.querySelectorAll('input[type=time]').forEach(inp=>{
-    inp.addEventListener('change', e=>{
-      const idx = +e.target.dataset.idx;
-      const field = e.target.dataset.field;
-      p.dias[idx][field] = e.target.value;
-      save();
-      render();
+  // Inputs de hora: abrir grid picker en lugar del selector nativo
+  cont.querySelectorAll('input[type=time][data-idx]').forEach(inp=>{
+    inp.addEventListener('click', e=>{
+      if(disabled || inp.disabled) return;
+      e.preventDefault();
+      const idx = +inp.dataset.idx;
+      const field = inp.dataset.field;
+      openTimePicker(inp.value, val=>{
+        p.dias[idx][field] = val;
+        save();
+        render();
+      });
     });
+    // Prevenir que se abra el selector nativo
+    inp.addEventListener('mousedown', e=>{ if(!inp.disabled) e.preventDefault(); });
   });
   cont.querySelectorAll('.del-btn').forEach(btn=>{
     btn.addEventListener('click', e=>{
@@ -1740,16 +2101,18 @@ function renderSemanas(p, semanas, disabled, diasOrdenados){
       render();
     });
   });
-  // Input manual de HE (horas extras) por día
-  cont.querySelectorAll('.he-input').forEach(inp=>{
-    inp.addEventListener('change', e=>{
+  // Botón para abrir el popover de HE manual (horas extras) por día
+  cont.querySelectorAll('.he-btn').forEach(btn=>{
+    btn.addEventListener('click', e=>{
       if(disabled) return;
-      const idx = +e.target.dataset.idx;
-      const val = parseFloat(e.target.value);
-      p.dias[idx].extraManual = (val > 0 && !isNaN(val)) ? val : 0;
-      if(!p.dias[idx].extraManual) delete p.dias[idx].extraManual;
-      save();
-      render();
+      e.stopPropagation();
+      const idx = +e.currentTarget.dataset.idx;
+      // Si el popover ya está abierto para este día, se cierra (toggle)
+      if(hePopover.style.display !== 'none' && heModalIdx === idx){
+        cerrarPopoverHE();
+        return;
+      }
+      abrirModalHE(idx, e.currentTarget);
     });
   });
 }
@@ -2065,6 +2428,195 @@ document.getElementById('modalDiaConfirm').addEventListener('click', ()=>{
   showToast(editandoFecha ? 'Día actualizado' : 'Día agregado');
 });
 
+// ===== Popover dropdown de HE manual (reemplaza al modal full-screen) =====
+const hePopover = document.getElementById('hePopover');
+const hePopArrow = document.getElementById('hePopArrow');
+const modalHERange = document.getElementById('modalHERange');
+const modalHEDisplay = document.getElementById('modalHEDisplay');
+const hePopInicio = document.getElementById('hePopInicio');
+const hePopFin = document.getElementById('hePopFin');
+const hePopTitulo = document.getElementById('hePopTitulo');
+let heModalIdx = null;
+let heModalLado = 'entrada';
+
+function setLadoModalHE(lado){
+  heModalLado = lado;
+  // Solo actúa sobre los botones dentro del popover (no sobre otros .he-lado-btn si los hubiera)
+  hePopover.querySelectorAll('.he-lado-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.lado === lado);
+  });
+}
+hePopover.querySelectorAll('.he-lado-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=> setLadoModalHE(btn.dataset.lado));
+});
+modalHERange.addEventListener('input', e=>{
+  modalHEDisplay.textContent = fmtMinutosHE(+e.target.value);
+});
+
+// Cierra el popover al hacer click fuera o en Escape
+function cerrarPopoverHE(){
+  hePopover.style.display = 'none';
+  heModalIdx = null;
+}
+document.addEventListener('click', e=>{
+  if(hePopover.style.display === 'none') return;
+  // Si el click NO fue dentro del popover NI en un .he-btn (que abre el popover), cerrar
+  if(!hePopover.contains(e.target) && !e.target.closest('.he-btn')){
+    cerrarPopoverHE();
+  }
+});
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape' && hePopover.style.display !== 'none'){
+    cerrarPopoverHE();
+  }
+});
+
+// Posiciona el popover respecto al elemento ancla (el botón '+ HE' / 'Editar HE')
+function esDispositivoMovil(){
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
+}
+
+function posicionarPopover(anchorEl){
+  const r = anchorEl.getBoundingClientRect();
+  const popW = 330;
+  const gap = 8;
+  const winW = window.innerWidth;
+  const winH = window.innerHeight;
+  const esMobile = esDispositivoMovil();
+
+  // En iPhone/móvil: centrar en pantalla y ocultar flecha
+  if(esMobile){
+    hePopover.style.left = Math.max(12, (winW - popW) / 2) + 'px';
+    hePopover.style.top = Math.max(12, (winH - 380) / 2) + 'px';
+    hePopArrow.style.display = 'none';
+    return;
+  }
+
+  hePopArrow.style.display = '';
+
+  // Posición X: alineado a la izquierda del botón, sin salirse de la ventana
+  let left = r.left;
+  if(left + popW > winW - 12){ left = winW - popW - 12; }
+  if(left < 12){ left = 12; }
+
+  // En PC: siempre abrir hacia arriba
+  const popEstH = 320;
+  let top = Math.max(12, r.top - popEstH - gap);
+  const arrowSide = 'bottom';
+
+  hePopover.style.left = left + 'px';
+  hePopover.style.top = top + 'px';
+
+  // Ajustar flecha: alineada horizontalmente con el centro del botón
+  const arrowLeft = Math.max(10, Math.min(r.left + r.width/2 - left - 7, popW - 24));
+  hePopArrow.style.left = arrowLeft + 'px';
+  if(arrowSide === 'top'){
+    hePopArrow.style.top = '-7px';
+    hePopArrow.style.bottom = 'auto';
+    hePopArrow.style.transform = 'rotate(45deg)';
+    hePopArrow.style.borderRight = 'none';
+    hePopArrow.style.borderBottom = 'none';
+    hePopArrow.style.borderLeft = '1px solid var(--line)';
+    hePopArrow.style.borderTop = '1px solid var(--line)';
+  }else{
+    hePopArrow.style.top = 'auto';
+    hePopArrow.style.bottom = '-7px';
+    hePopArrow.style.transform = 'rotate(225deg)';
+    hePopArrow.style.borderRight = 'none';
+    hePopArrow.style.borderBottom = 'none';
+    hePopArrow.style.borderLeft = '1px solid var(--line)';
+    hePopArrow.style.borderTop = '1px solid var(--line)';
+  }
+}
+
+function abrirModalHE(idx, anchorEl){
+  const p = getActiva();
+  if(!p || p.cerrada) return;
+  heModalIdx = idx;
+  const dia = p.dias[idx];
+  const existente = dia.heManual;
+  setLadoModalHE(existente ? existente.lado : 'entrada');
+  const minutos = existente && existente.minutos > 0 ? existente.minutos : 30;
+  modalHERange.value = minutos;
+  modalHEDisplay.textContent = fmtMinutosHE(minutos);
+  // Cargar horario actual del día en los inputs del popover
+  hePopInicio.value = dia.inicio || '';
+  hePopFin.value = dia.fin || '';
+  hePopTitulo.textContent = existente ? 'Editar hora extra' : 'Agregar hora extra';
+  document.getElementById('modalHEQuitar').style.display = existente ? 'flex' : 'none';
+  hePopover.style.display = 'block';
+  if(anchorEl){
+    posicionarPopover(anchorEl);
+  }
+}
+
+document.getElementById('modalHECancel').addEventListener('click', cerrarPopoverHE);
+document.getElementById('hePopClose').addEventListener('click', cerrarPopoverHE);
+
+// Cambios en los inputs de hora del popover se guardan en vivo en el día
+hePopInicio.addEventListener('change', e=>{
+  const p = getActiva();
+  if(!p || p.cerrada || heModalIdx === null) return;
+  p.dias[heModalIdx].inicio = e.target.value;
+  save();
+  render();
+  // Tras render, el botón original pudo cambiar; reabrir con el nuevo ancla
+  const newBtn = document.querySelector(`.he-btn[data-idx="${heModalIdx}"]`);
+  if(newBtn) posicionarPopover(newBtn);
+});
+hePopFin.addEventListener('change', e=>{
+  const p = getActiva();
+  if(!p || p.cerrada || heModalIdx === null) return;
+  p.dias[heModalIdx].fin = e.target.value;
+  save();
+  render();
+  const newBtn = document.querySelector(`.he-btn[data-idx="${heModalIdx}"]`);
+  if(newBtn) posicionarPopover(newBtn);
+});
+
+document.getElementById('modalHEQuitar').addEventListener('click', ()=>{
+  const p = getActiva();
+  if(p && !p.cerrada && heModalIdx !== null){
+    const dia = p.dias[heModalIdx];
+    const he = dia.heManual;
+    // Revertir el ajuste de hora solo si fue auto-ajustada
+    if(he && he.timeAdjusted){
+      if(he.lado === 'salida' && dia.fin){
+        dia.fin = restarMinutos(dia.fin, he.minutos);
+      } else if(he.lado === 'entrada' && dia.inicio){
+        dia.inicio = sumarMinutos(dia.inicio, he.minutos);
+      }
+    }
+    delete dia.heManual;
+    save();
+  }
+  cerrarPopoverHE();
+  render();
+  showToast('Hora extra manual quitada');
+});
+
+document.getElementById('modalHEConfirm').addEventListener('click', ()=>{
+  const p = getActiva();
+  if(!p || p.cerrada || heModalIdx === null){ cerrarPopoverHE(); return; }
+  const minutos = +modalHERange.value;
+  const dia = p.dias[heModalIdx];
+  let timeAdjusted = false;
+  // Ajustar automáticamente la hora de entrada o salida según los minutos de HE
+  if(heModalLado === 'salida' && dia.fin){
+    dia.fin = sumarMinutos(dia.fin, minutos);
+    timeAdjusted = true;
+  } else if(heModalLado === 'entrada' && dia.inicio){
+    dia.inicio = restarMinutos(dia.inicio, minutos);
+    timeAdjusted = true;
+  }
+  p.dias[heModalIdx].heManual = { lado: heModalLado, minutos, timeAdjusted };
+  delete p.dias[heModalIdx].extraManual;
+  save();
+  cerrarPopoverHE();
+  render();
+  showToast('Hora extra manual guardada');
+});
+
 const overlayPatron = document.getElementById('modalOverlayPatron');
 let patronTipoActivo = 'corta';
 
@@ -2123,15 +2675,6 @@ document.getElementById('modalPatronConfirm').addEventListener('click', ()=>{
   const esEdit = patronTipoActivo.endsWith('-edit');
   const nombreTipo = etiquetaTipoSemana(patronTipoActivo).replace(' · ','');
   showToast(`${nombreTipo} generada (descansa ${NOMBRES_DIAS_LIBRES[diaLibre]}${tipoBase==='corta'?' y domingo':''})`);
-});
-
-document.getElementById('btnCerrar').addEventListener('click', ()=>{
-  const p = getActiva();
-  if(!p) return;
-  p.cerrada = !p.cerrada;
-  save();
-  render();
-  showToast(p.cerrada ? 'Planilla cerrada' : 'Planilla reabierta');
 });
 
 document.getElementById('btnEliminar').addEventListener('click', ()=>{
@@ -2260,11 +2803,15 @@ document.getElementById('btnExportar').addEventListener('click', async ()=>{
             bodyRows.push([`${wk} ${dm}`, info.label, '', '—', '—', '—']);
           }else{
             const etiqueta = tipo==='trabajo' ? `${wk} ${dm}` : `${wk} ${dm} (${info.label})`;
-            // Extra por día: prioridad manual > diferencia real (horas trabajadas - programadas)
-            const mod = tiemposModificados[fecha];
-            const extraAuto = (mod && mod.extraDiff > 0.001) ? mod.extraDiff : 0;
-            const extraDia = (r.dia.extraManual > 0.001) ? r.dia.extraManual : extraAuto;
-            bodyRows.push([etiqueta, r.dia.inicio||'', r.dia.fin||'', fmtHoras(r.horas), fmtHoras(r.ordinaria), fmtHoras(extraDia)]);
+            // r.extra ya incluye tanto la HE manual como el excedente de horario real.
+            // Para anotar visualmente la HE manual en inicio/fin:
+            const heDia = r.dia.heManual;
+            const heMin = (heDia && heDia.minutos > 0) ? heDia.minutos : 0;
+            const heEnEntradaPdf = heMin > 0 && heDia.lado === 'entrada';
+            const heEnSalidaPdf = heMin > 0 && heDia.lado === 'salida';
+            const inicioTxt = heEnEntradaPdf ? `${r.dia.inicio||''} (+${fmtMinutosHE(heMin)})` : (r.dia.inicio||'');
+            const finTxt = heEnSalidaPdf ? `${r.dia.fin||''} (+${fmtMinutosHE(heMin)})` : (r.dia.fin||'');
+            bodyRows.push([etiqueta, inicioTxt, finTxt, fmtHoras(r.horas), fmtHoras(r.ordinaria), fmtHoras(r.extra)]);
           }
         }else{
           tiposFilas.push('');
@@ -2293,20 +2840,24 @@ document.getElementById('btnExportar').addEventListener('click', async ()=>{
             const fechaFila = addDays(sem.lunes, data.row.index);
             const r = diasMap[fechaFila];
             const mod = tiemposModificados[fechaFila];
-            const tieneHE = r && r.dia.extraManual > 0.001;
+            const heFila = r && r.dia.heManual;
+            const heFilaMin = (heFila && heFila.minutos > 0) ? heFila.minutos : 0;
+            const heFilaEntrada = heFilaMin > 0 && heFila.lado === 'entrada';
+            const heFilaSalida = heFilaMin > 0 && heFila.lado === 'salida';
+            const tieneHE = heFilaMin > 0;
             if(mod || tieneHE){
               // Columna 0: día en rojo si tiene modificación o HE manual
               if(data.column.index===0){
                 data.cell.styles.textColor = [200,0,0];
                 data.cell.styles.fontStyle = 'bold';
               }
-              // Columna 1: inicio en rojo
-              if(data.column.index===1 && mod && mod.entrada){
+              // Columna 1: inicio en rojo (modificado o con HE manual en la entrada)
+              if(data.column.index===1 && ((mod && mod.entrada) || heFilaEntrada)){
                 data.cell.styles.textColor = [200,0,0];
                 data.cell.styles.fontStyle = 'bold';
               }
-              // Columna 2: fin en rojo
-              if(data.column.index===2 && mod && mod.salida){
+              // Columna 2: fin en rojo (modificado o con HE manual en la salida)
+              if(data.column.index===2 && ((mod && mod.salida) || heFilaSalida)){
                 data.cell.styles.textColor = [200,0,0];
                 data.cell.styles.fontStyle = 'bold';
               }
@@ -2451,14 +3002,16 @@ document.getElementById('btnCSV').addEventListener('click', async ()=>{
   const diasOrdenados = diasSegunFiltro(p);
   if(diasOrdenados.length === 0){ showToast('No hay días cargados en ese mes'); return; }
   const semanas = agruparSemanas(diasOrdenados, p.horasNormales || LIMITE_SEMANAL_DEFAULT);
-  const rows = [['DETALLE DIARIO'],['Mes','Semana','Dia','Fecha','Tipo','Inicio','Fin','Horas trabajadas','Horas ordinarias','Horas extra','Feriado','Valor feriado']];
+  const rows = [['DETALLE DIARIO'],['Mes','Semana','Dia','Fecha','Tipo','Inicio','Fin','Horas trabajadas','Horas ordinarias','Horas extra','HE manual (hrs)','HE manual (lado)','Feriado','Valor feriado']];
   semanas.forEach((sem,i)=>{
     sem.rows.forEach(r=>{
       const { wk, dm } = fmtFecha(r.dia.fecha);
       const isFer = esFeriadoEfectivo(r.dia);
       const tipo = r.dia.tipo || 'trabajo';
       const tipoLabel = tipoInfo(tipo).label;
-      rows.push([mesLabel(r.dia.fecha.slice(0,7)), 'Semana '+(i+1), wk, dm, tipoLabel, r.dia.inicio||'', r.dia.fin||'', fmtHoras(r.horas), fmtHoras(r.ordinaria), fmtHoras(r.extra), isFer ? nombreFeriadoEfectivo(r.dia) : '', isFer ? (r.dia.feriadoValor||0) : '']);
+      const heDia = r.dia.heManual;
+      const heMin = (heDia && heDia.minutos > 0) ? heDia.minutos : 0;
+      rows.push([mesLabel(r.dia.fecha.slice(0,7)), 'Semana '+(i+1), wk, dm, tipoLabel, r.dia.inicio||'', r.dia.fin||'', fmtHoras(r.horas), fmtHoras(r.ordinaria), fmtHoras(r.extra), heMin>0 ? fmtHoras(heMin/60) : '', heMin>0 ? (heDia.lado==='entrada'?'Entrada':'Salida') : '', isFer ? nombreFeriadoEfectivo(r.dia) : '', isFer ? (r.dia.feriadoValor||0) : '']);
     });
   });
   rows.push([]);
